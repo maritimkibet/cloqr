@@ -1,0 +1,59 @@
+# Flutter/Dart build outputs
+build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+pubspec.lock
+
+# Android build outputs
+android/.gradle/
+android/app/build/
+android/build/
+android/local.properties
+android/.idea/
+android/captures/
+android/gradlew
+android/gradlew.bat
+android/key.properties
+
+# iOS build outputs
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/.generated/
+ios/Runner.xcworkspace/
+
+# Large binary files
+*.so
+*.apk
+*.aab
+*.ipa
+*.dill
+
+# Node/Expo (if used)
+node_modules/
+.expo/
+dist/
+npm-debug.*
+web-build/
+
+# Sensitive files
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+
+# IDE
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+build_output.log
+*.log
