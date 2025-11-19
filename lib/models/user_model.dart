@@ -1,31 +1,37 @@
 class User {
   final String userId;
   final String username;
+  final String email;
   final String campus;
   final String? avatarUrl;
   final String? blurredPhotoUrl;
   final String mode;
   final int trustScore;
+  final String? bio;
 
   User({
     required this.userId,
     required this.username,
+    required this.email,
     required this.campus,
     this.avatarUrl,
     this.blurredPhotoUrl,
     required this.mode,
     required this.trustScore,
+    this.bio,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
       userId: json['user_id'],
       username: json['username'],
+      email: json['email'] ?? '',
       campus: json['campus'],
       avatarUrl: json['avatar_url'],
       blurredPhotoUrl: json['blurred_photo_url'],
       mode: json['mode'] ?? 'dating',
       trustScore: json['trust_score'] ?? 100,
+      bio: json['bio'],
     );
   }
 
@@ -33,11 +39,13 @@ class User {
     return {
       'user_id': userId,
       'username': username,
+      'email': email,
       'campus': campus,
       'avatar_url': avatarUrl,
       'blurred_photo_url': blurredPhotoUrl,
       'mode': mode,
       'trust_score': trustScore,
+      'bio': bio,
     };
   }
 }
