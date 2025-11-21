@@ -98,7 +98,7 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
                             ? Theme.of(context)
                                 .colorScheme
                                 .primary
-                                .withOpacity(0.1)
+                                .withValues(alpha: 0.1)
                             : null,
                       ),
                       child: Row(

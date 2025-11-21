@@ -93,7 +93,7 @@ class _ModeSelectScreenState extends State<ModeSelectScreen> {
                                 ? Theme.of(context)
                                     .colorScheme
                                     .primary
-                                    .withOpacity(0.1)
+                                    .withValues(alpha: 0.1)
                                 : null,
                           ),
                           child: Row(

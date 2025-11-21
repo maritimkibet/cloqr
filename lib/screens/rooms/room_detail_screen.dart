@@ -87,7 +87,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
         children: [
           Container(
             padding: const EdgeInsets.all(8),
-            color: Colors.orange.withOpacity(0.1),
+            color: Colors.orange.withValues(alpha: 0.1),
             child: Row(
               children: [
                 const Icon(Icons.info_outline, size: 16, color: Colors.orange),
@@ -141,7 +141,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
               color: Colors.white,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 4,
                   offset: const Offset(0, -2),
                 ),

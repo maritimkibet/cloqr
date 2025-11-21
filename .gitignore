@@ -57,3 +57,4 @@ web-build/
 # Logs
 build_output.log
 *.log
+.env

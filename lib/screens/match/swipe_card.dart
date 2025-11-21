@@ -107,7 +107,7 @@ class _SwipeCardState extends State<SwipeCard>
                         end: Alignment.bottomCenter,
                         colors: [
                           Colors.transparent,
-                          Colors.black.withOpacity(0.8),
+                          Colors.black.withValues(alpha: 0.8),
                         ],
                       ),
                     ),
@@ -175,7 +175,7 @@ class _SwipeCardState extends State<SwipeCard>
                                     children: interests.take(3).map((interest) {
                                       return Chip(
                                         label: Text(interest),
-                                        backgroundColor: Colors.white.withOpacity(0.2),
+                                        backgroundColor: Colors.white.withValues(alpha: 0.2),
                                         labelStyle: const TextStyle(color: Colors.white),
                                       );
                                     }).toList(),
