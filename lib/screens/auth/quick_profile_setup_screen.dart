@@ -3,33 +3,21 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../home/home_screen.dart';
 
-class AvatarSelectionScreen extends StatefulWidget {
-  final String email;
-  final String username;
-  final String campus;
-  final String mode;
-  final Map<String, dynamic> profileData;
-  final String? qrCode;
-  final String? adminPassword;
-  final String? password;
+class QuickProfileSetupScreen extends StatefulWidget {
+  final String qrCode;
 
-  const AvatarSelectionScreen({
+  const QuickProfileSetupScreen({
     super.key,
-    required this.email,
-    required this.username,
-    required this.campus,
-    required this.mode,
-    required this.profileData,
-    this.qrCode,
-    this.adminPassword,
-    this.password,
+    required this.qrCode,
   });
 
   @override
-  State<AvatarSelectionScreen> createState() => _AvatarSelectionScreenState();
+  State<QuickProfileSetupScreen> createState() => _QuickProfileSetupScreenState();
 }
 
-class _AvatarSelectionScreenState extends State<AvatarSelectionScreen> {
+class _QuickProfileSetupScreenState extends State<QuickProfileSetupScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _nicknameController = TextEditingController();
   String? selectedAvatar;
   bool _isLoading = false;
 
@@ -38,7 +26,15 @@ class _AvatarSelectionScreenState extends State<AvatarSelectionScreen> {
     (index) => 'https://api.dicebear.com/7.x/avataaars/svg?seed=avatar$index',
   );
 
+  @override
+  void dispose() {
+    _nicknameController.dispose();
+    super.dispose();
+  }
+
   Future<void> _complete() async {
+    if (!_formKey.currentState!.validate()) return;
+    
     if (selectedAvatar == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please select an avatar')),
@@ -51,19 +47,17 @@ class _AvatarSelectionScreenState extends State<AvatarSelectionScreen> {
     try {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       
+      // Generate a unique email based on QR code and timestamp
+      final uniqueEmail = 'user_${widget.qrCode}_${DateTime.now().millisecondsSinceEpoch}@cloqr.app';
+      
       await authProvider.register(
-        email: widget.email,
-        username: widget.username,
-        campus: widget.campus,
+        email: uniqueEmail,
+        username: _nicknameController.text.trim(),
+        campus: 'Campus', // Will be set from QR code data
         avatar: selectedAvatar!,
         qrCode: widget.qrCode,
-        password: widget.password ?? widget.adminPassword,
+        password: 'auto_generated_${DateTime.now().millisecondsSinceEpoch}',
       );
-
-      await authProvider.updateProfile({
-        ...widget.profileData,
-        'mode': widget.mode,
-      });
 
       if (mounted) {
         Navigator.of(context).pushAndRemoveUntil(
@@ -74,7 +68,10 @@ class _AvatarSelectionScreenState extends State<AvatarSelectionScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
+          SnackBar(
+            content: Text(e.toString().replaceAll('Exception: ', '')),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } finally {
@@ -88,29 +85,58 @@ class _AvatarSelectionScreenState extends State<AvatarSelectionScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Choose Avatar'),
+        title: const Text('Create Profile'),
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        child: Form(
+          key: _formKey,
+          child: ListView(
+            padding: const EdgeInsets.all(24),
             children: [
               Text(
-                'Select your avatar',
+                'Choose your nickname',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
               ),
               const SizedBox(height: 8),
               Text(
-                'You can upload a real photo later',
+                'This is how others will see you',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Colors.grey[600],
                     ),
               ),
               const SizedBox(height: 24),
-              Expanded(
+              TextFormField(
+                controller: _nicknameController,
+                decoration: InputDecoration(
+                  labelText: 'Nickname',
+                  hintText: 'Enter a cool nickname',
+                  prefixIcon: const Icon(Icons.person),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a nickname';
+                  }
+                  if (value.length < 3) {
+                    return 'Nickname must be at least 3 characters';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 32),
+              Text(
+                'Select your avatar',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                height: 400,
                 child: GridView.builder(
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 3,
@@ -143,6 +169,12 @@ class _AvatarSelectionScreenState extends State<AvatarSelectionScreen> {
                           child: Image.network(
                             avatar,
                             fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                color: Colors.grey[200],
+                                child: const Icon(Icons.person, size: 40),
+                              );
+                            },
                           ),
                         ),
                       ),
@@ -150,7 +182,7 @@ class _AvatarSelectionScreenState extends State<AvatarSelectionScreen> {
                   },
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 32),
               SizedBox(
                 width: double.infinity,
                 height: 56,
@@ -164,7 +196,7 @@ class _AvatarSelectionScreenState extends State<AvatarSelectionScreen> {
                   child: _isLoading
                       ? const CircularProgressIndicator()
                       : const Text(
-                          'Complete',
+                          'Join Cloqr',
                           style: TextStyle(fontSize: 18),
                         ),
                 ),

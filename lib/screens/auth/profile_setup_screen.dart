@@ -6,6 +6,7 @@ class ProfileSetupScreen extends StatefulWidget {
   final String mode;
   final String? qrCode;
   final String? adminPassword;
+  final String? password;
 
   const ProfileSetupScreen({
     super.key,
@@ -13,6 +14,7 @@ class ProfileSetupScreen extends StatefulWidget {
     required this.mode,
     this.qrCode,
     this.adminPassword,
+    this.password,
   });
 
   @override
@@ -62,6 +64,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
           mode: widget.mode,
           qrCode: widget.qrCode,
           adminPassword: widget.adminPassword,
+          password: widget.password,
           profileData: {
             'year': int.tryParse(_yearController.text),
             'course': _courseController.text.trim(),

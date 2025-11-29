@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
-import 'profile_setup_screen.dart';
+import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
+import '../home/home_screen.dart';
 
-class EmailVerificationScreen extends StatefulWidget {
-  final String mode;
-
-  const EmailVerificationScreen({super.key, required this.mode});
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
 
   @override
-  State<EmailVerificationScreen> createState() =>
-      _EmailVerificationScreenState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
+class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -25,29 +24,31 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
     super.dispose();
   }
 
-  Future<void> _continue() async {
+  Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
 
     try {
-      // Just validate email format, no OTP needed
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      await authProvider.login(
+        _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+
       if (mounted) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => ProfileSetupScreen(
-              email: _emailController.text.trim(),
-              mode: widget.mode,
-              password: _passwordController.text,
-            ),
-          ),
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const HomeScreen()),
+          (route) => false,
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
+          SnackBar(
+            content: Text(e.toString().replaceAll('Exception: ', '')),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } finally {
@@ -61,7 +62,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Create Account'),
+        title: const Text('Login'),
       ),
       body: SafeArea(
         child: Padding(
@@ -72,14 +73,14 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Enter your details',
+                  'Welcome back!',
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Create your account with email and password',
+                  'Login to your account',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Colors.grey[600],
                       ),
@@ -112,7 +113,6 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                   obscureText: _obscurePassword,
                   decoration: InputDecoration(
                     labelText: 'Password',
-                    hintText: 'At least 6 characters',
                     prefixIcon: const Icon(Icons.lock),
                     suffixIcon: IconButton(
                       icon: Icon(
@@ -132,10 +132,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter a password';
-                    }
-                    if (value.length < 6) {
-                      return 'Password must be at least 6 characters';
+                      return 'Please enter your password';
                     }
                     return null;
                   },
@@ -145,7 +142,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                   width: double.infinity,
                   height: 56,
                   child: ElevatedButton(
-                    onPressed: _isLoading ? null : _continue,
+                    onPressed: _isLoading ? null : _login,
                     style: ElevatedButton.styleFrom(
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -154,7 +151,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                     child: _isLoading
                         ? const CircularProgressIndicator()
                         : const Text(
-                            'Continue',
+                            'Login',
                             style: TextStyle(fontSize: 18),
                           ),
                   ),

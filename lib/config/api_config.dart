@@ -1,8 +1,8 @@
 class ApiConfig {
   // Use your computer's IP address so phone can connect
   // Change this to 'localhost' if running on emulator
-  static const String baseUrl = 'http://10.10.8.33:3000/api';
-  static const String socketUrl = 'http://10.10.8.33:3000';
+  static const String baseUrl = 'https://cloqr-backend.onrender.com/api';
+  static const String socketUrl = 'https://cloqr-backend.onrender.com';
   
   // Auth endpoints
   static const String sendOtp = '$baseUrl/auth/send-otp';

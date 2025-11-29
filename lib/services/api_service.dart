@@ -74,4 +74,26 @@ class ApiService {
       throw Exception('Network error: $e');
     }
   }
+
+  static Future<Map<String, dynamic>> patch(
+    String url,
+    Map<String, dynamic> body,
+  ) async {
+    try {
+      final headers = await _getHeaders();
+      final response = await http.patch(
+        Uri.parse(url),
+        headers: headers,
+        body: jsonEncode(body),
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception(jsonDecode(response.body)['error'] ?? 'Request failed');
+      }
+    } catch (e) {
+      throw Exception('Network error: $e');
+    }
+  }
 }

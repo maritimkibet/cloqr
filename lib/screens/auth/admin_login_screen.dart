@@ -12,8 +12,8 @@ class AdminLoginScreen extends StatefulWidget {
 
 class _AdminLoginScreenState extends State<AdminLoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
+  final _emailController = TextEditingController(text: 'brianvocaldo@gmail.com');
+  final _passwordController = TextEditingController(text: 'kiss2121');
   bool _isLoading = false;
   bool _obscurePassword = true;
 
@@ -45,7 +45,10 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
+          SnackBar(
+            content: Text(e.toString().replaceAll('Exception: ', '')),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } finally {
@@ -77,7 +80,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Login with your admin credentials',
+                  'Credentials are pre-filled. Just tap Login!',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Colors.grey[600],
                       ),

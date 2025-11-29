@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'mode_select_screen.dart';
+import 'admin_login_screen.dart';
+import 'qr_join_screen.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
@@ -39,23 +40,49 @@ class WelcomeScreen extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 height: 56,
-                child: ElevatedButton(
+                child: ElevatedButton.icon(
                   onPressed: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => const ModeSelectScreen(),
+                        builder: (_) => const QRJoinScreen(),
                       ),
                     );
                   },
+                  icon: const Icon(Icons.qr_code_scanner),
+                  label: const Text(
+                    'Scan QR to Join',
+                    style: TextStyle(fontSize: 18),
+                  ),
                   style: ElevatedButton.styleFrom(
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text(
-                    'Get Started',
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const AdminLoginScreen(),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.admin_panel_settings),
+                  label: const Text(
+                    'Admin Login',
                     style: TextStyle(fontSize: 18),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
               ),

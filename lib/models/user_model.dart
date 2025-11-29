@@ -8,6 +8,7 @@ class User {
   final String mode;
   final int trustScore;
   final String? bio;
+  final bool isAdmin;
 
   User({
     required this.userId,
@@ -19,6 +20,7 @@ class User {
     required this.mode,
     required this.trustScore,
     this.bio,
+    this.isAdmin = false,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -32,6 +34,7 @@ class User {
       mode: json['mode'] ?? 'dating',
       trustScore: json['trust_score'] ?? 100,
       bio: json['bio'],
+      isAdmin: json['is_admin'] ?? false,
     );
   }
 
@@ -46,6 +49,7 @@ class User {
       'mode': mode,
       'trust_score': trustScore,
       'bio': bio,
+      'is_admin': isAdmin,
     };
   }
 }
