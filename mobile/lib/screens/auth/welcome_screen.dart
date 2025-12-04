@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'admin_login_screen.dart';
+import 'mode_select_screen.dart';
 import 'quick_profile_setup_screen.dart';
 
 class WelcomeScreen extends StatefulWidget {
@@ -70,6 +71,30 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     ),
               ),
               const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const ModeSelectScreen(),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'Get Started',
+                    style: TextStyle(fontSize: 18),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
                 height: 56,

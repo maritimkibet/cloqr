@@ -12,6 +12,28 @@ class Validators {
     return null;
   }
   
+  static String? validateCampusEmail(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Campus email is required';
+    }
+    
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (!emailRegex.hasMatch(value)) {
+      return 'Invalid email format';
+    }
+    
+    // Check for campus email domains
+    final email = value.toLowerCase();
+    if (!email.endsWith('.edu') &&
+        !email.endsWith('.ac.za') &&
+        !email.contains('student') &&
+        !email.contains('university')) {
+      return 'Please use your campus email address';
+    }
+    
+    return null;
+  }
+  
   static String? validateUsername(String? value) {
     if (value == null || value.isEmpty) {
       return 'Username is required';

@@ -10,8 +10,6 @@ class AvatarSelectionScreen extends StatefulWidget {
   final String mode;
   final Map<String, dynamic> profileData;
   final String? qrCode;
-  final String? adminPassword;
-  final String? password;
   final bool emailVerified;
 
   const AvatarSelectionScreen({
@@ -22,8 +20,6 @@ class AvatarSelectionScreen extends StatefulWidget {
     required this.mode,
     required this.profileData,
     this.qrCode,
-    this.adminPassword,
-    this.password,
     this.emailVerified = false,
   });
 
@@ -59,7 +55,6 @@ class _AvatarSelectionScreenState extends State<AvatarSelectionScreen> {
         campus: widget.campus,
         avatar: selectedAvatar!,
         qrCode: widget.qrCode,
-        password: widget.password ?? widget.adminPassword,
         emailVerified: widget.emailVerified,
       );
 

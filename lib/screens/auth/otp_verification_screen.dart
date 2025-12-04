@@ -27,33 +27,6 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
     super.dispose();
   }
 
-  Future<String?> _showAdminPasswordDialog() async {
-    final passwordController = TextEditingController();
-    return showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Admin Password'),
-        content: TextField(
-          controller: passwordController,
-          obscureText: true,
-          decoration: const InputDecoration(
-            labelText: 'Enter admin password',
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, passwordController.text),
-            child: const Text('Continue'),
-          ),
-        ],
-      ),
-    );
-  }
-
   Future<String?> _showQRScanner() async {
     final qrController = TextEditingController();
     return showDialog<String>(
@@ -103,39 +76,19 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
       await authProvider.verifyOTP(widget.email, _otpController.text);
 
       if (mounted) {
-        // Check if admin email
-        final isAdmin = widget.email.toLowerCase() == 'brianvocaldo@gmail.com';
-        
-        if (isAdmin) {
-          // Show password dialog for admin
-          final password = await _showAdminPasswordDialog();
-          if (password != null && mounted) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (_) => ProfileSetupScreen(
-                  email: widget.email,
-                  mode: widget.mode,
-                  adminPassword: password,
-                ),
+        // Show QR scanner for campus verification
+        final qrCode = await _showQRScanner();
+        if (qrCode != null && mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) => ProfileSetupScreen(
+                email: widget.email,
+                mode: widget.mode,
+                qrCode: qrCode,
               ),
-            );
-          }
-        } else {
-          // Show QR scanner for regular users
-          final qrCode = await _showQRScanner();
-          if (qrCode != null && mounted) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (_) => ProfileSetupScreen(
-                  email: widget.email,
-                  mode: widget.mode,
-                  qrCode: qrCode,
-                ),
-              ),
-            );
-          }
+            ),
+          );
         }
       }
     } catch (e) {

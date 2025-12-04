@@ -79,6 +79,20 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
             subtitle: user?.campus ?? 'Not set',
             onTap: () => _showComingSoon('Campus Change'),
           ),
+          const SizedBox(height: 12),
+          _buildSettingCard(
+            icon: Icons.favorite_outline,
+            title: 'Mode',
+            subtitle: _getModeDisplayName(user?.mode ?? 'dating'),
+            onTap: () => _showModeSelector(),
+          ),
+          const SizedBox(height: 12),
+          _buildSettingCard(
+            icon: Icons.lock_outline,
+            title: 'Set Password',
+            subtitle: 'Optional - for login on other devices',
+            onTap: () => _showPasswordSetup(),
+          ),
 
           const SizedBox(height: 32),
 
@@ -451,6 +465,312 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
           ),
         ),
       ),
+      ),
+    );
+  }
+
+  String _getModeDisplayName(String mode) {
+    switch (mode) {
+      case 'dating':
+        return 'Dating';
+      case 'study':
+        return 'Study Partner';
+      case 'friends':
+        return 'Friends';
+      case 'groups':
+        return 'Group Projects';
+      default:
+        return 'Dating';
+    }
+  }
+
+  void _showModeSelector() {
+    final user = Provider.of<AuthProvider>(context, listen: false).user;
+    String? selectedMode = user?.mode ?? 'dating';
+
+    final modes = [
+      {'id': 'dating', 'title': 'Dating', 'icon': Icons.favorite},
+      {'id': 'study', 'title': 'Study Partner', 'icon': Icons.menu_book},
+      {'id': 'friends', 'title': 'Friends', 'icon': Icons.people},
+      {'id': 'groups', 'title': 'Group Projects', 'icon': Icons.group_work},
+    ];
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          backgroundColor: const Color(0xFF1A2332),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: const Text(
+            'Select Mode',
+            style: TextStyle(color: Colors.white),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: modes.map((mode) {
+              final isSelected = selectedMode == mode['id'];
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: InkWell(
+                  onTap: () {
+                    setState(() {
+                      selectedMode = mode['id'] as String;
+                    });
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? AppTheme.primaryColor.withValues(alpha: 0.2)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isSelected
+                            ? AppTheme.primaryColor
+                            : Colors.grey.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          mode['icon'] as IconData,
+                          color: isSelected ? AppTheme.primaryColor : Colors.grey,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          mode['title'] as String,
+                          style: TextStyle(
+                            color: isSelected ? Colors.white : Colors.grey[400],
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                          ),
+                        ),
+                        const Spacer(),
+                        if (isSelected)
+                          const Icon(Icons.check_circle, color: AppTheme.primaryColor),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                'Cancel',
+                style: TextStyle(color: Colors.grey[400]),
+              ),
+            ),
+            TextButton(
+              onPressed: () async {
+                try {
+                  await Provider.of<AuthProvider>(context, listen: false)
+                      .updateProfile({'mode': selectedMode});
+                  if (mounted) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Mode updated successfully'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                    this.setState(() {}); // Refresh the settings screen
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Failed to update mode: $e'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
+              },
+              child: const Text(
+                'Save',
+                style: TextStyle(color: AppTheme.primaryColor),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showPasswordSetup() {
+    final passwordController = TextEditingController();
+    final confirmPasswordController = TextEditingController();
+    bool obscurePassword = true;
+    bool obscureConfirm = true;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          backgroundColor: const Color(0xFF1A2332),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: const Text(
+            'Set Password',
+            style: TextStyle(color: Colors.white),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Set a password to login from other devices. This is optional.',
+                style: TextStyle(color: Colors.grey[400], fontSize: 14),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: passwordController,
+                obscureText: obscurePassword,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  labelText: 'Password',
+                  labelStyle: TextStyle(color: Colors.grey[400]),
+                  hintText: 'At least 6 characters',
+                  hintStyle: TextStyle(color: Colors.grey[600]),
+                  prefixIcon: const Icon(Icons.lock, color: AppTheme.primaryColor),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      obscurePassword ? Icons.visibility : Icons.visibility_off,
+                      color: Colors.grey[400],
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        obscurePassword = !obscurePassword;
+                      });
+                    },
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppTheme.primaryColor),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: confirmPasswordController,
+                obscureText: obscureConfirm,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  labelText: 'Confirm Password',
+                  labelStyle: TextStyle(color: Colors.grey[400]),
+                  prefixIcon: const Icon(Icons.lock, color: AppTheme.primaryColor),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      obscureConfirm ? Icons.visibility : Icons.visibility_off,
+                      color: Colors.grey[400],
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        obscureConfirm = !obscureConfirm;
+                      });
+                    },
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppTheme.primaryColor),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                'Cancel',
+                style: TextStyle(color: Colors.grey[400]),
+              ),
+            ),
+            TextButton(
+              onPressed: () async {
+                final password = passwordController.text;
+                final confirm = confirmPasswordController.text;
+
+                if (password.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Please enter a password'),
+                      backgroundColor: Colors.orange,
+                    ),
+                  );
+                  return;
+                }
+
+                if (password.length < 6) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Password must be at least 6 characters'),
+                      backgroundColor: Colors.orange,
+                    ),
+                  );
+                  return;
+                }
+
+                if (password != confirm) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Passwords do not match'),
+                      backgroundColor: Colors.orange,
+                    ),
+                  );
+                  return;
+                }
+
+                try {
+                  await Provider.of<AuthProvider>(context, listen: false)
+                      .setupPin(password);
+                  if (mounted) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Password set successfully'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Failed to set password: $e'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
+              },
+              child: const Text(
+                'Save',
+                style: TextStyle(color: AppTheme.primaryColor),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

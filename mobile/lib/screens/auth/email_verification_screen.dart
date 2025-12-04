@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../utils/validators.dart';
 import 'profile_setup_screen.dart';
 
 class EmailVerificationScreen extends StatefulWidget {
@@ -17,10 +18,8 @@ class EmailVerificationScreen extends StatefulWidget {
 class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
   final _otpController = TextEditingController();
   bool _isLoading = false;
-  bool _obscurePassword = true;
   bool _otpSent = false;
   bool _otpVerified = false;
   int _resendCountdown = 0;
@@ -28,7 +27,6 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
   @override
   void dispose() {
     _emailController.dispose();
-    _passwordController.dispose();
     _otpController.dispose();
     super.dispose();
   }
@@ -41,33 +39,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
     try {
       final email = _emailController.text.trim();
       
-      // Check if this is admin email - skip OTP and go directly to profile setup
-      if (email.toLowerCase() == 'brianvocaldo@gmail.com') {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Admin detected - OTP verification skipped'),
-              backgroundColor: Colors.green,
-            ),
-          );
-
-          // Navigate directly to profile setup
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => ProfileSetupScreen(
-                email: email,
-                mode: widget.mode,
-                password: _passwordController.text,
-                emailVerified: true, // Admin bypasses verification
-              ),
-            ),
-          );
-        }
-        return;
-      }
-
-      // Regular student - send OTP
+      // Send OTP to campus email
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       await authProvider.sendOTP(email);
 
@@ -142,14 +114,13 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
           ),
         );
 
-        // Navigate to profile setup
+        // Navigate to profile setup (no password needed)
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (_) => ProfileSetupScreen(
               email: _emailController.text.trim(),
               mode: widget.mode,
-              password: _passwordController.text,
               emailVerified: true,
             ),
           ),
@@ -217,58 +188,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                     ),
                     helperText: 'Must be a valid student email address',
                   ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your email';
-                    }
-                    if (!value.contains('@')) {
-                      return 'Please enter a valid email';
-                    }
-                    // Check for common student email domains
-                    final email = value.toLowerCase();
-                    if (!email.endsWith('.edu') &&
-                        !email.endsWith('.ac.za') &&
-                        !email.contains('student') &&
-                        !email.contains('university')) {
-                      return 'Please use your student email';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _passwordController,
-                  obscureText: _obscurePassword,
-                  enabled: !_otpSent,
-                  decoration: InputDecoration(
-                    labelText: 'Password',
-                    hintText: 'At least 6 characters',
-                    prefixIcon: const Icon(Icons.lock),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscurePassword
-                            ? Icons.visibility
-                            : Icons.visibility_off,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _obscurePassword = !_obscurePassword;
-                        });
-                      },
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter a password';
-                    }
-                    if (value.length < 6) {
-                      return 'Password must be at least 6 characters';
-                    }
-                    return null;
-                  },
+                  validator: Validators.validateCampusEmail,
                 ),
                 if (_otpSent) ...[
                   const SizedBox(height: 24),

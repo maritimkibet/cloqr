@@ -5,8 +5,6 @@ class ProfileSetupScreen extends StatefulWidget {
   final String email;
   final String mode;
   final String? qrCode;
-  final String? adminPassword;
-  final String? password;
   final bool emailVerified;
 
   const ProfileSetupScreen({
@@ -14,8 +12,6 @@ class ProfileSetupScreen extends StatefulWidget {
     required this.email,
     required this.mode,
     this.qrCode,
-    this.adminPassword,
-    this.password,
     this.emailVerified = false,
   });
 
@@ -65,8 +61,6 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
           campus: _campusController.text.trim(),
           mode: widget.mode,
           qrCode: widget.qrCode,
-          adminPassword: widget.adminPassword,
-          password: widget.password,
           emailVerified: widget.emailVerified,
           profileData: {
             'year': int.tryParse(_yearController.text),

@@ -1,7 +1,7 @@
 class ApiConfig {
-  // PRODUCTION: Cloud Run URL
-  static const String baseUrl = '/api';
-  static const String socketUrl = '';
+  // PRODUCTION: Render.com URL
+  static const String baseUrl = 'https://cloqr-backend.onrender.com/api';
+  static const String socketUrl = 'https://cloqr-backend.onrender.com';
   
   // Auth endpoints
   static const String sendOtp = '$baseUrl/auth/send-otp';
