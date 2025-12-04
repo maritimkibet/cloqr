@@ -1,0 +1,57 @@
+# Render.com Blueprint for Cloqr Backend
+# This file allows one-click deployment to Render
+
+services:
+  # Backend Web Service
+  - type: web
+    name: cloqr-backend
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: ADMIN_EMAIL
+        value: brianvocaldo@gmail.com
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: EMAIL_HOST
+        value: smtp.gmail.com
+      - key: EMAIL_PORT
+        value: 587
+      - key: EMAIL_USER
+        value: brianvocaldo@gmail.com
+      - key: EMAIL_PASSWORD
+        sync: false
+      - key: ALLOWED_EMAIL_DOMAINS
+        value: edu,ac.za,student.edu,university.edu
+      - key: MAX_FILE_SIZE
+        value: 5242880
+      - key: DATABASE_URL
+        fromDatabase:
+          name: cloqr-db
+          property: connectionString
+      - key: REDIS_URL
+        fromDatabase:
+          name: cloqr-redis
+          property: connectionString
+
+databases:
+  # PostgreSQL Database
+  - name: cloqr-db
+    plan: free
+    databaseName: cloqr
+    user: cloqr_user
+
+  # Redis Cache
+  - name: cloqr-redis
+    plan: free
