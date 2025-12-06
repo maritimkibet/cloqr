@@ -13,11 +13,11 @@ if (process.env.REDIS_URL) {
     }
   });
 } else {
-  // Use individual env vars (local, Google Cloud)
+  // Use individual env vars (local, Google Cloud, Upstash)
   const redisConfig = {
     socket: {
       host: process.env.REDIS_HOST || 'localhost',
-      port: process.env.REDIS_PORT || 6379,
+      port: parseInt(process.env.REDIS_PORT) || 6379,
     }
   };
 
@@ -26,9 +26,10 @@ if (process.env.REDIS_URL) {
     redisConfig.password = process.env.REDIS_PASSWORD;
   }
 
-  // Enable TLS for production
-  if (process.env.NODE_ENV === 'production' && process.env.REDIS_HOST) {
+  // Enable TLS if specified or in production with external Redis
+  if (process.env.REDIS_TLS === 'true' || (process.env.NODE_ENV === 'production' && process.env.REDIS_HOST && process.env.REDIS_HOST !== 'localhost')) {
     redisConfig.socket.tls = true;
+    redisConfig.socket.rejectUnauthorized = false;
   }
 
   client = redis.createClient(redisConfig);
