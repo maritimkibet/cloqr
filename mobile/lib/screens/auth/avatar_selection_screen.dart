@@ -33,7 +33,7 @@ class _AvatarSelectionScreenState extends State<AvatarSelectionScreen> {
 
   final List<String> avatars = List.generate(
     12,
-    (index) => 'https://api.dicebear.com/7.x/avataaars/svg?seed=avatar$index',
+    (index) => 'https://api.dicebear.com/9.x/avataaars/svg?seed=avatar$index&backgroundColor=b6e3f4',
   );
 
   Future<void> _complete() async {
@@ -54,7 +54,7 @@ class _AvatarSelectionScreenState extends State<AvatarSelectionScreen> {
         username: widget.username,
         campus: widget.campus,
         avatar: selectedAvatar!,
-        qrCode: widget.qrCode,
+        qrCode: widget.qrCode ?? 'TEST_QR_123', // Default QR for testing
         emailVerified: widget.emailVerified,
       );
 
