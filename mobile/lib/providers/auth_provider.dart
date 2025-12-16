@@ -50,7 +50,7 @@ class AuthProvider with ChangeNotifier {
     required String email,
     required String username,
     required String campus,
-    required String avatar,
+    String? avatar,
     String? qrCode,
     String? password,
     bool emailVerified = false,
@@ -58,13 +58,16 @@ class AuthProvider with ChangeNotifier {
     _setLoading(true);
 
     try {
+      // Generate a secure password if not provided
+      final finalPassword = password ?? 'auto_${DateTime.now().millisecondsSinceEpoch}_${email.hashCode}';
+      
       final response = await ApiService.post(ApiConfig.register, {
         'email': email,
         'username': username,
         'campus': campus,
-        'avatar': avatar,
+        if (avatar != null) 'avatar': avatar,
         if (qrCode != null) 'qrCode': qrCode,
-        if (password != null) 'password': password,
+        'password': finalPassword,
         'emailVerified': emailVerified,
       });
 

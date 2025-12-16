@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../providers/chat_provider.dart';
+import '../../widgets/user_avatar.dart';
 import 'chat_detail_screen.dart';
 
 class ChatsScreen extends StatefulWidget {
@@ -64,13 +65,10 @@ class _ChatsScreenState extends State<ChatsScreen> {
               final otherMember = chat.members.first;
 
               return ListTile(
-                leading: CircleAvatar(
-                  backgroundImage: otherMember.avatarUrl != null
-                      ? NetworkImage(otherMember.avatarUrl!)
-                      : null,
-                  child: otherMember.avatarUrl == null
-                      ? const Icon(Icons.person)
-                      : null,
+                leading: UserAvatar(
+                  avatarUrl: otherMember.avatarUrl,
+                  username: otherMember.username,
+                  radius: 20,
                 ),
                 title: Text(
                   chat.type == 'group' 

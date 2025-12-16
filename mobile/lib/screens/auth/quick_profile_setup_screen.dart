@@ -18,13 +18,7 @@ class QuickProfileSetupScreen extends StatefulWidget {
 class _QuickProfileSetupScreenState extends State<QuickProfileSetupScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nicknameController = TextEditingController();
-  String? selectedAvatar;
   bool _isLoading = false;
-
-  final List<String> avatars = List.generate(
-    12,
-    (index) => 'https://api.dicebear.com/7.x/avataaars/svg?seed=avatar$index',
-  );
 
   @override
   void dispose() {
@@ -34,13 +28,6 @@ class _QuickProfileSetupScreenState extends State<QuickProfileSetupScreen> {
 
   Future<void> _complete() async {
     if (!_formKey.currentState!.validate()) return;
-    
-    if (selectedAvatar == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select an avatar')),
-      );
-      return;
-    }
 
     setState(() => _isLoading = true);
 
@@ -54,7 +41,7 @@ class _QuickProfileSetupScreenState extends State<QuickProfileSetupScreen> {
         email: uniqueEmail,
         username: _nicknameController.text.trim(),
         campus: 'Campus', // Will be set from QR code data
-        avatar: selectedAvatar!,
+        avatar: null, // No avatar needed
         qrCode: widget.qrCode,
         password: 'auto_generated_${DateTime.now().millisecondsSinceEpoch}',
       );
@@ -126,61 +113,6 @@ class _QuickProfileSetupScreenState extends State<QuickProfileSetupScreen> {
                   }
                   return null;
                 },
-              ),
-              const SizedBox(height: 32),
-              Text(
-                'Select your avatar',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                height: 400,
-                child: GridView.builder(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                  ),
-                  itemCount: avatars.length,
-                  itemBuilder: (context, index) {
-                    final avatar = avatars[index];
-                    final isSelected = selectedAvatar == avatar;
-
-                    return GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          selectedAvatar = avatar;
-                        });
-                      },
-                      child: Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: isSelected
-                                ? Theme.of(context).colorScheme.primary
-                                : Colors.grey[300]!,
-                            width: isSelected ? 3 : 1,
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: Image.network(
-                            avatar,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                color: Colors.grey[200],
-                                child: const Icon(Icons.person, size: 40),
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
               ),
               const SizedBox(height: 32),
               SizedBox(

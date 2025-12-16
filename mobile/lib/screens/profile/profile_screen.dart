@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../providers/auth_provider.dart';
 import '../../utils/theme.dart';
+import '../../widgets/user_avatar.dart';
 import '../auth/welcome_screen.dart';
 import 'edit_profile_screen.dart';
 import 'settings_screen.dart';
@@ -209,19 +210,10 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                                     child: CircleAvatar(
                                       radius: 65,
                                       backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.2),
-                                      child: CircleAvatar(
+                                      child: UserAvatar(
+                                        avatarUrl: user.avatarUrl,
+                                        username: user.username,
                                         radius: 60,
-                                        backgroundImage: user.avatarUrl != null
-                                            ? NetworkImage(user.avatarUrl!)
-                                            : null,
-                                        backgroundColor: AppTheme.backgroundColor,
-                                        child: user.avatarUrl == null
-                                            ? Icon(
-                                                Icons.person,
-                                                size: 60,
-                                                color: AppTheme.primaryColor,
-                                              )
-                                            : null,
                                       ),
                                     ),
                                   ),

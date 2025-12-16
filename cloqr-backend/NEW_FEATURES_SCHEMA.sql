@@ -1,178 +1,15 @@
--- Users table
-CREATE TABLE users (
-  user_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  email_hash VARCHAR(255) UNIQUE NOT NULL,
-  username VARCHAR(50) UNIQUE NOT NULL,
-  campus VARCHAR(100) NOT NULL,
-  avatar_url VARCHAR(255),
-  blurred_photo_url VARCHAR(255),
-  pin_hash VARCHAR(255),
-  mode VARCHAR(20) DEFAULT 'dating',
-  trust_score INTEGER DEFAULT 100,
-  is_verified BOOLEAN DEFAULT false,
-  is_admin BOOLEAN DEFAULT false,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Profiles table
-CREATE TABLE profiles (
-  profile_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES users(user_id) ON DELETE CASCADE,
-  year INTEGER,
-  course VARCHAR(100),
-  bio TEXT,
-  interests JSONB,
-  study_style VARCHAR(50),
-  study_time VARCHAR(50),
-  hobbies JSONB,
-  personality JSONB,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Matches table
-CREATE TABLE matches (
-  match_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_a UUID REFERENCES users(user_id) ON DELETE CASCADE,
-  user_b UUID REFERENCES users(user_id) ON DELETE CASCADE,
-  status VARCHAR(20) DEFAULT 'pending',
-  match_score INTEGER,
-  matched_at TIMESTAMP,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE(user_a, user_b)
-);
-
--- Chats table
-CREATE TABLE chats (
-  chat_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  type VARCHAR(20) DEFAULT 'direct',
-  name VARCHAR(100),
-  created_by UUID REFERENCES users(user_id),
-  expires_at TIMESTAMP,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Chat members table
-CREATE TABLE chat_members (
-  chat_id UUID REFERENCES chats(chat_id) ON DELETE CASCADE,
-  user_id UUID REFERENCES users(user_id) ON DELETE CASCADE,
-  joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (chat_id, user_id)
-);
-
--- Messages table (stored temporarily)
-CREATE TABLE messages (
-  message_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  chat_id UUID REFERENCES chats(chat_id) ON DELETE CASCADE,
-  sender_id UUID REFERENCES users(user_id) ON DELETE CASCADE,
-  content TEXT,
-  type VARCHAR(20) DEFAULT 'text',
-  is_one_time BOOLEAN DEFAULT false,
-  viewed_by JSONB DEFAULT '[]',
-  expires_at TIMESTAMP NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- QR Rooms table
-CREATE TABLE qr_rooms (
-  room_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  creator_id UUID REFERENCES users(user_id),
-  name VARCHAR(100) NOT NULL,
-  qr_code VARCHAR(255) UNIQUE NOT NULL,
-  room_type VARCHAR(50),
-  expires_at TIMESTAMP NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Campus Verification QR Codes
-CREATE TABLE campus_qr_codes (
-  qr_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  campus_name VARCHAR(100) NOT NULL,
-  qr_code VARCHAR(255) UNIQUE NOT NULL,
-  is_active BOOLEAN DEFAULT true,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Room members table
-CREATE TABLE room_members (
-  room_id UUID REFERENCES qr_rooms(room_id) ON DELETE CASCADE,
-  user_id UUID REFERENCES users(user_id) ON DELETE CASCADE,
-  burner_username VARCHAR(50),
-  joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (room_id, user_id)
-);
-
--- Swipes table
-CREATE TABLE swipes (
-  swipe_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  swiper_id UUID REFERENCES users(user_id) ON DELETE CASCADE,
-  swiped_id UUID REFERENCES users(user_id) ON DELETE CASCADE,
-  direction VARCHAR(10),
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE(swiper_id, swiped_id)
-);
-
--- Reports table
-CREATE TABLE reports (
-  report_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  reporter_id UUID REFERENCES users(user_id),
-  reported_id UUID REFERENCES users(user_id),
-  reason TEXT,
-  status VARCHAR(20) DEFAULT 'pending',
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Blocks table
-CREATE TABLE blocks (
-  block_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  blocker_id UUID REFERENCES users(user_id) ON DELETE CASCADE,
-  blocked_id UUID REFERENCES users(user_id) ON DELETE CASCADE,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE(blocker_id, blocked_id)
-);
-
--- Campuses table
-CREATE TABLE campuses (
-  campus_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name VARCHAR(100) NOT NULL,
-  campus_code VARCHAR(20) UNIQUE NOT NULL,
-  location VARCHAR(100),
-  is_active BOOLEAN DEFAULT true,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- OTP table
-CREATE TABLE otps (
-  otp_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  email_hash VARCHAR(255) NOT NULL,
-  otp_code VARCHAR(6) NOT NULL,
-  campus_id UUID REFERENCES campuses(campus_id),
-  has_edu_email BOOLEAN DEFAULT false,
-  expires_at TIMESTAMP NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Indexes
-CREATE INDEX idx_users_campus ON users(campus);
-CREATE INDEX idx_profiles_course ON profiles(course);
-CREATE INDEX idx_matches_users ON matches(user_a, user_b);
-CREATE INDEX idx_messages_chat ON messages(chat_id);
-CREATE INDEX idx_messages_expires ON messages(expires_at);
-CREATE INDEX idx_qr_rooms_expires ON qr_rooms(expires_at);
-CREATE INDEX idx_otps_email ON otps(email_hash);
-
 -- ============================================
--- NEW FEATURES TABLES
+-- NEW FEATURES TABLES - Run this SQL manually
 -- ============================================
+-- Copy and paste this into your PostgreSQL client (pgAdmin, psql, etc.)
 
 -- Events & Meetups
-CREATE TABLE events (
+CREATE TABLE IF NOT EXISTS events (
   event_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   creator_id UUID REFERENCES users(user_id) ON DELETE CASCADE,
   title VARCHAR(200) NOT NULL,
   description TEXT,
-  event_type VARCHAR(50), -- party, study, sports, social, other
+  event_type VARCHAR(50),
   location VARCHAR(200),
   campus VARCHAR(100),
   start_time TIMESTAMP NOT NULL,
@@ -184,16 +21,16 @@ CREATE TABLE events (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE event_attendees (
+CREATE TABLE IF NOT EXISTS event_attendees (
   event_id UUID REFERENCES events(event_id) ON DELETE CASCADE,
   user_id UUID REFERENCES users(user_id) ON DELETE CASCADE,
-  status VARCHAR(20) DEFAULT 'going', -- going, interested, maybe
+  status VARCHAR(20) DEFAULT 'going',
   joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (event_id, user_id)
 );
 
 -- Study Groups
-CREATE TABLE study_groups (
+CREATE TABLE IF NOT EXISTS study_groups (
   group_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   creator_id UUID REFERENCES users(user_id) ON DELETE CASCADE,
   name VARCHAR(200) NOT NULL,
@@ -208,15 +45,15 @@ CREATE TABLE study_groups (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE study_group_members (
+CREATE TABLE IF NOT EXISTS study_group_members (
   group_id UUID REFERENCES study_groups(group_id) ON DELETE CASCADE,
   user_id UUID REFERENCES users(user_id) ON DELETE CASCADE,
-  role VARCHAR(20) DEFAULT 'member', -- admin, member
+  role VARCHAR(20) DEFAULT 'member',
   joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (group_id, user_id)
 );
 
-CREATE TABLE study_sessions (
+CREATE TABLE IF NOT EXISTS study_sessions (
   session_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   group_id UUID REFERENCES study_groups(group_id) ON DELETE CASCADE,
   title VARCHAR(200) NOT NULL,
@@ -228,36 +65,36 @@ CREATE TABLE study_sessions (
 );
 
 -- Icebreaker Questions
-CREATE TABLE icebreaker_questions (
+CREATE TABLE IF NOT EXISTS icebreaker_questions (
   question_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   question_text TEXT NOT NULL,
-  category VARCHAR(50), -- fun, deep, study, random
+  category VARCHAR(50),
   is_active BOOLEAN DEFAULT true,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- User Badges
-CREATE TABLE user_badges (
+CREATE TABLE IF NOT EXISTS user_badges (
   badge_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES users(user_id) ON DELETE CASCADE,
-  badge_type VARCHAR(50) NOT NULL, -- verified_student, active_user, trusted_member, early_adopter
+  badge_type VARCHAR(50) NOT NULL,
   earned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   UNIQUE(user_id, badge_type)
 );
 
 -- Polls
-CREATE TABLE polls (
+CREATE TABLE IF NOT EXISTS polls (
   poll_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   creator_id UUID REFERENCES users(user_id) ON DELETE CASCADE,
   question TEXT NOT NULL,
-  options JSONB NOT NULL, -- array of options
+  options JSONB NOT NULL,
   campus VARCHAR(100),
   expires_at TIMESTAMP,
   is_active BOOLEAN DEFAULT true,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE poll_votes (
+CREATE TABLE IF NOT EXISTS poll_votes (
   vote_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   poll_id UUID REFERENCES polls(poll_id) ON DELETE CASCADE,
   user_id UUID REFERENCES users(user_id) ON DELETE CASCADE,
@@ -266,19 +103,19 @@ CREATE TABLE poll_votes (
   UNIQUE(poll_id, user_id)
 );
 
--- Communities (Interest-based)
-CREATE TABLE communities (
+-- Communities
+CREATE TABLE IF NOT EXISTS communities (
   community_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name VARCHAR(100) NOT NULL,
   description TEXT,
-  category VARCHAR(50), -- gaming, music, sports, tech, art, etc
+  category VARCHAR(50),
   campus VARCHAR(100),
   icon VARCHAR(50),
   is_active BOOLEAN DEFAULT true,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE community_members (
+CREATE TABLE IF NOT EXISTS community_members (
   community_id UUID REFERENCES communities(community_id) ON DELETE CASCADE,
   user_id UUID REFERENCES users(user_id) ON DELETE CASCADE,
   role VARCHAR(20) DEFAULT 'member',
@@ -286,7 +123,7 @@ CREATE TABLE community_members (
   PRIMARY KEY (community_id, user_id)
 );
 
-CREATE TABLE community_posts (
+CREATE TABLE IF NOT EXISTS community_posts (
   post_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   community_id UUID REFERENCES communities(community_id) ON DELETE CASCADE,
   user_id UUID REFERENCES users(user_id) ON DELETE CASCADE,
@@ -297,7 +134,7 @@ CREATE TABLE community_posts (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE post_likes (
+CREATE TABLE IF NOT EXISTS post_likes (
   post_id UUID REFERENCES community_posts(post_id) ON DELETE CASCADE,
   user_id UUID REFERENCES users(user_id) ON DELETE CASCADE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -305,7 +142,7 @@ CREATE TABLE post_likes (
 );
 
 -- User Streaks
-CREATE TABLE user_streaks (
+CREATE TABLE IF NOT EXISTS user_streaks (
   user_id UUID PRIMARY KEY REFERENCES users(user_id) ON DELETE CASCADE,
   login_streak INTEGER DEFAULT 0,
   last_login_date DATE,
@@ -315,7 +152,7 @@ CREATE TABLE user_streaks (
 );
 
 -- Message Reactions
-CREATE TABLE message_reactions (
+CREATE TABLE IF NOT EXISTS message_reactions (
   reaction_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   message_id UUID REFERENCES messages(message_id) ON DELETE CASCADE,
   user_id UUID REFERENCES users(user_id) ON DELETE CASCADE,
@@ -325,7 +162,7 @@ CREATE TABLE message_reactions (
 );
 
 -- Profile Prompts
-CREATE TABLE profile_prompts (
+CREATE TABLE IF NOT EXISTS profile_prompts (
   prompt_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES users(user_id) ON DELETE CASCADE,
   prompt_text VARCHAR(200) NOT NULL,
@@ -334,33 +171,33 @@ CREATE TABLE profile_prompts (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- User Connections (for mutual friends)
-CREATE TABLE user_connections (
+-- User Connections
+CREATE TABLE IF NOT EXISTS user_connections (
   connection_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_a UUID REFERENCES users(user_id) ON DELETE CASCADE,
   user_b UUID REFERENCES users(user_id) ON DELETE CASCADE,
-  connection_type VARCHAR(20) DEFAULT 'match', -- match, study_buddy, friend
+  connection_type VARCHAR(20) DEFAULT 'match',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   UNIQUE(user_a, user_b)
 );
 
--- Safety Reports (enhanced)
-CREATE TABLE safety_reports (
+-- Safety Reports
+CREATE TABLE IF NOT EXISTS safety_reports (
   report_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   reporter_id UUID REFERENCES users(user_id),
   reported_id UUID REFERENCES users(user_id),
-  report_type VARCHAR(50), -- harassment, spam, fake_profile, inappropriate_content, other
+  report_type VARCHAR(50),
   description TEXT,
   evidence_url VARCHAR(255),
-  status VARCHAR(20) DEFAULT 'pending', -- pending, reviewing, resolved, dismissed
+  status VARCHAR(20) DEFAULT 'pending',
   admin_notes TEXT,
   resolved_by UUID REFERENCES users(user_id),
   resolved_at TIMESTAMP,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- User Preferences (for dark mode, notifications, etc)
-CREATE TABLE user_preferences (
+-- User Preferences
+CREATE TABLE IF NOT EXISTS user_preferences (
   user_id UUID PRIMARY KEY REFERENCES users(user_id) ON DELETE CASCADE,
   dark_mode BOOLEAN DEFAULT false,
   notifications_enabled BOOLEAN DEFAULT true,
@@ -371,12 +208,12 @@ CREATE TABLE user_preferences (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Location Check-ins (for "who's at the library")
-CREATE TABLE location_checkins (
+-- Location Check-ins
+CREATE TABLE IF NOT EXISTS location_checkins (
   checkin_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES users(user_id) ON DELETE CASCADE,
   location_name VARCHAR(200) NOT NULL,
-  location_type VARCHAR(50), -- library, cafe, gym, common_area
+  location_type VARCHAR(50),
   campus VARCHAR(100),
   latitude DECIMAL(10, 8),
   longitude DECIMAL(11, 8),
@@ -386,7 +223,7 @@ CREATE TABLE location_checkins (
 );
 
 -- Popular Locations
-CREATE TABLE popular_locations (
+CREATE TABLE IF NOT EXISTS popular_locations (
   location_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name VARCHAR(200) NOT NULL,
   location_type VARCHAR(50),
@@ -401,10 +238,10 @@ CREATE TABLE popular_locations (
 );
 
 -- Notifications
-CREATE TABLE notifications (
+CREATE TABLE IF NOT EXISTS notifications (
   notification_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES users(user_id) ON DELETE CASCADE,
-  type VARCHAR(50), -- match, message, event, poll, badge, etc
+  type VARCHAR(50),
   title VARCHAR(200),
   body TEXT,
   data JSONB,
@@ -413,25 +250,25 @@ CREATE TABLE notifications (
 );
 
 -- ============================================
--- INDEXES FOR NEW TABLES
+-- INDEXES
 -- ============================================
 
-CREATE INDEX idx_events_campus ON events(campus);
-CREATE INDEX idx_events_start_time ON events(start_time);
-CREATE INDEX idx_events_type ON events(event_type);
-CREATE INDEX idx_study_groups_campus ON study_groups(campus);
-CREATE INDEX idx_study_groups_course ON study_groups(course);
-CREATE INDEX idx_polls_campus ON polls(campus);
-CREATE INDEX idx_polls_expires ON polls(expires_at);
-CREATE INDEX idx_communities_campus ON communities(campus);
-CREATE INDEX idx_community_posts_community ON community_posts(community_id);
-CREATE INDEX idx_notifications_user ON notifications(user_id, is_read);
-CREATE INDEX idx_location_checkins_expires ON location_checkins(expires_at);
-CREATE INDEX idx_location_checkins_campus ON location_checkins(campus);
-CREATE INDEX idx_safety_reports_status ON safety_reports(status);
+CREATE INDEX IF NOT EXISTS idx_events_campus ON events(campus);
+CREATE INDEX IF NOT EXISTS idx_events_start_time ON events(start_time);
+CREATE INDEX IF NOT EXISTS idx_events_type ON events(event_type);
+CREATE INDEX IF NOT EXISTS idx_study_groups_campus ON study_groups(campus);
+CREATE INDEX IF NOT EXISTS idx_study_groups_course ON study_groups(course);
+CREATE INDEX IF NOT EXISTS idx_polls_campus ON polls(campus);
+CREATE INDEX IF NOT EXISTS idx_polls_expires ON polls(expires_at);
+CREATE INDEX IF NOT EXISTS idx_communities_campus ON communities(campus);
+CREATE INDEX IF NOT EXISTS idx_community_posts_community ON community_posts(community_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id, is_read);
+CREATE INDEX IF NOT EXISTS idx_location_checkins_expires ON location_checkins(expires_at);
+CREATE INDEX IF NOT EXISTS idx_location_checkins_campus ON location_checkins(campus);
+CREATE INDEX IF NOT EXISTS idx_safety_reports_status ON safety_reports(status);
 
 -- ============================================
--- SEED DATA FOR ICEBREAKER QUESTIONS
+-- SEED DATA
 -- ============================================
 
 INSERT INTO icebreaker_questions (question_text, category) VALUES
@@ -449,11 +286,8 @@ INSERT INTO icebreaker_questions (question_text, category) VALUES
 ('Best concert or show you''ve been to?', 'fun'),
 ('What''s your unpopular opinion?', 'random'),
 ('Favorite study music or silence?', 'study'),
-('What''s the best advice you''ve ever received?', 'deep');
-
--- ============================================
--- DEFAULT COMMUNITIES
--- ============================================
+('What''s the best advice you''ve ever received?', 'deep')
+ON CONFLICT DO NOTHING;
 
 INSERT INTO communities (name, description, category, icon) VALUES
 ('Gaming Hub', 'Connect with fellow gamers', 'gaming', '🎮'),
@@ -465,4 +299,11 @@ INSERT INTO communities (name, description, category, icon) VALUES
 ('Foodies', 'Best eats on and off campus', 'food', '🍕'),
 ('Travel & Adventure', 'Share travel experiences', 'travel', '✈️'),
 ('Photography', 'Share your shots', 'photography', '📸'),
-('Entrepreneurs', 'Startup ideas and business', 'business', '💼');
+('Entrepreneurs', 'Startup ideas and business', 'business', '💼')
+ON CONFLICT DO NOTHING;
+
+-- ============================================
+-- DONE!
+-- ============================================
+-- All tables created successfully!
+-- You can now use the new features APIs.

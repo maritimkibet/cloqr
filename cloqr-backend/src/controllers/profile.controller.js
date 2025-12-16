@@ -45,19 +45,6 @@ exports.updateProfile = async (req, res) => {
   }
 };
 
-exports.selectAvatar = async (req, res) => {
-  try {
-    const { avatar } = req.body;
-
-    await pool.query('UPDATE users SET avatar_url = $1 WHERE user_id = $2', [avatar, req.userId]);
-
-    res.json({ message: 'Avatar selected', avatar });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Failed to select avatar' });
-  }
-};
-
 exports.uploadPhoto = async (req, res) => {
   try {
     if (!req.file) {

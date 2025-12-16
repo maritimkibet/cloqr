@@ -110,7 +110,7 @@ exports.verifyOTP = async (req, res) => {
 
 exports.register = async (req, res) => {
   try {
-    let { email, username, campus, avatar, qrCode, password, emailVerified } = req.body;
+    let { email, username, campus, avatar = null, qrCode, password, emailVerified } = req.body;
     const emailHash = hashEmail(email);
 
     // Validate required fields
@@ -221,49 +221,40 @@ exports.login = async (req, res) => {
 
     const user = result.rows[0];
 
-    // Check if this is admin trying to login
-    const isAdminEmail = email.toLowerCase() === process.env.ADMIN_EMAIL.toLowerCase();
-    
-    if (isAdminEmail) {
-      // Admin must use admin password
-      if (password !== process.env.ADMIN_PASSWORD) {
-        return res.status(401).json({ error: 'Invalid email or password' });
-      }
-      
-      // Admin login successful
-      const token = jwt.sign(
-        { userId: user.user_id, isAdmin: true }, 
-        process.env.JWT_SECRET, 
-        { expiresIn: process.env.JWT_EXPIRES_IN }
-      );
-      
-      return res.json({ 
-        token, 
-        user: { ...user, is_admin: true } 
-      });
-    }
-
-    // Regular user login - verify password hash
+    // Check if user has a password hash
     if (!user.pin_hash) {
       return res.status(400).json({ 
         error: 'Account not set up properly. Please register again.' 
       });
     }
 
-    // Compare provided password with stored hash
-    const isValidPassword = await bcrypt.compare(password, user.pin_hash);
-    if (!isValidPassword) {
+    // Verify password (works for both admin and regular users)
+    const isPasswordValid = await bcrypt.compare(password, user.pin_hash);
+    
+    if (!isPasswordValid) {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    // Regular user login successful
+    // Login successful - generate token
     const token = jwt.sign(
       { userId: user.user_id, isAdmin: user.is_admin || false }, 
       process.env.JWT_SECRET, 
       { expiresIn: process.env.JWT_EXPIRES_IN }
     );
-
-    res.json({ token, user });
+    
+    return res.json({ 
+      token, 
+      user: {
+        user_id: user.user_id,
+        username: user.username,
+        email: email,
+        campus: user.campus,
+        avatar_url: user.avatar_url,
+        is_admin: user.is_admin,
+        trust_score: user.trust_score,
+        mode: user.mode
+      }
+    });
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ error: 'Login failed. Please try again.' });

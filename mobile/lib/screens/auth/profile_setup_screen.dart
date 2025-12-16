@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'avatar_selection_screen.dart';
+import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
+import '../home/home_screen.dart';
 
 class ProfileSetupScreen extends StatefulWidget {
   final String email;
@@ -49,29 +51,51 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     super.dispose();
   }
 
+  bool _isLoading = false;
+
   Future<void> _continue() async {
     if (!_formKey.currentState!.validate()) return;
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => AvatarSelectionScreen(
-          email: widget.email,
-          username: _usernameController.text.trim(),
-          campus: _campusController.text.trim(),
-          mode: widget.mode,
-          qrCode: widget.qrCode,
-          emailVerified: widget.emailVerified,
-          profileData: {
-            'year': int.tryParse(_yearController.text),
-            'course': _courseController.text.trim(),
-            'bio': _bioController.text.trim(),
-            'interests': selectedInterests,
-            'study_style': selectedStudyStyle,
-          },
-        ),
-      ),
-    );
+    setState(() => _isLoading = true);
+
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      
+      await authProvider.register(
+        email: widget.email,
+        username: _usernameController.text.trim(),
+        campus: _campusController.text.trim(),
+        avatar: null, // No avatar needed
+        qrCode: widget.qrCode ?? 'TEST_QR_123',
+        emailVerified: widget.emailVerified,
+      );
+
+      await authProvider.updateProfile({
+        'year': int.tryParse(_yearController.text),
+        'course': _courseController.text.trim(),
+        'bio': _bioController.text.trim(),
+        'interests': selectedInterests,
+        'study_style': selectedStudyStyle,
+        'mode': widget.mode,
+      });
+
+      if (mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const HomeScreen()),
+          (route) => false,
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString())),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   @override
@@ -215,16 +239,18 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton(
-                  onPressed: _continue,
+                  onPressed: _isLoading ? null : _continue,
                   style: ElevatedButton.styleFrom(
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text(
-                    'Continue',
-                    style: TextStyle(fontSize: 18),
-                  ),
+                  child: _isLoading
+                      ? const CircularProgressIndicator()
+                      : const Text(
+                          'Complete',
+                          style: TextStyle(fontSize: 18),
+                        ),
                 ),
               ),
             ],
