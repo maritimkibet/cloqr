@@ -1,7 +1,10 @@
 const { Pool } = require('pg');
 require('dotenv').config();
 
+// Use DATABASE_URL if available (Render), otherwise use individual fields (local)
 const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false,
   host: process.env.DB_HOST,
   port: process.env.DB_PORT,
   database: process.env.DB_NAME,

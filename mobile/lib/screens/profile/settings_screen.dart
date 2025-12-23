@@ -94,6 +94,21 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
             onTap: () => _showPasswordSetup(),
           ),
 
+          // Admin Dashboard (only show if user is admin)
+          if (user?.isAdmin == true) ...[
+            const SizedBox(height: 32),
+            _buildSectionHeader('Administration'),
+            const SizedBox(height: 12),
+            _buildSettingCard(
+              icon: Icons.admin_panel_settings,
+              title: 'Admin Dashboard',
+              subtitle: 'Manage users, reports, and campus QR codes',
+              onTap: () {
+                Navigator.pushNamed(context, '/admin-dashboard');
+              },
+            ),
+          ],
+
           const SizedBox(height: 32),
 
           // Notifications Section

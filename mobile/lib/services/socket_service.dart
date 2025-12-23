@@ -9,31 +9,61 @@ class SocketService {
 
   IO.Socket? _socket;
   final StorageService _storage = StorageService();
+  bool _isConnecting = false;
+  bool _isConnected = false;
+
+  bool get isConnected => _isConnected;
 
   Future<void> connect() async {
+    if (_isConnecting || _isConnected) return;
+    
+    _isConnecting = true;
     final token = await _storage.getToken();
     
-    _socket = IO.io(
-      ApiConfig.socketUrl,
-      IO.OptionBuilder()
-          .setTransports(['websocket'])
-          .setAuth({'token': token})
-          .build(),
-    );
+    if (token == null) {
+      print('⚠️ Cannot connect socket: No token available');
+      _isConnecting = false;
+      return;
+    }
+    
+    try {
+      _socket = IO.io(
+        ApiConfig.socketUrl,
+        IO.OptionBuilder()
+            .setTransports(['websocket'])
+            .setAuth({'token': token})
+            .enableReconnection()
+            .setReconnectionAttempts(5)
+            .setReconnectionDelay(1000)
+            .build(),
+      );
 
-    _socket?.connect();
+      _socket?.connect();
 
-    _socket?.onConnect((_) {
-      print('✅ Socket connected');
-    });
+      _socket?.onConnect((_) {
+        print('✅ Socket connected');
+        _isConnected = true;
+        _isConnecting = false;
+      });
 
-    _socket?.onDisconnect((_) {
-      print('❌ Socket disconnected');
-    });
+      _socket?.onDisconnect((_) {
+        print('❌ Socket disconnected');
+        _isConnected = false;
+      });
 
-    _socket?.onError((error) {
-      print('Socket error: $error');
-    });
+      _socket?.onConnectError((error) {
+        print('Socket connection error: $error');
+        _isConnected = false;
+        _isConnecting = false;
+      });
+
+      _socket?.onError((error) {
+        print('Socket error: $error');
+      });
+    } catch (e) {
+      print('Failed to initialize socket: $e');
+      _isConnecting = false;
+    }
   }
 
   void disconnect() {

@@ -38,8 +38,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // TODO: Implement API call to update profile
-      await Future.delayed(const Duration(seconds: 1));
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      
+      await authProvider.updateProfile({
+        'username': _usernameController.text,
+        'bio': _bioController.text,
+      });
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

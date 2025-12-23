@@ -3,6 +3,10 @@ class ApiConfig {
   static const String baseUrl = 'https://cloqr-backend.onrender.com/api';
   static const String socketUrl = 'https://cloqr-backend.onrender.com';
   
+  // DEVELOPMENT: Local network URL (uncomment for local testing)
+  // static const String baseUrl = 'http://10.10.8.33:3000/api';
+  // static const String socketUrl = 'http://10.10.8.33:3000';
+  
   // Auth endpoints
   static const String sendOtp = '$baseUrl/auth/send-otp';
   static const String verifyOtp = '$baseUrl/auth/verify-otp';

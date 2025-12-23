@@ -20,6 +20,19 @@ pool.on('connect', () => {
 
 pool.on('error', (err) => {
   console.error('❌ Database error:', err);
+  // Don't exit process, let the app handle errors gracefully
+  if (err.code === 'ECONNREFUSED') {
+    console.error('💡 Make sure PostgreSQL is running');
+  }
+});
+
+// Test connection on startup
+pool.query('SELECT NOW()', (err, res) => {
+  if (err) {
+    console.error('❌ Database connection test failed:', err.message);
+  } else {
+    console.log('✅ Database connection test successful');
+  }
 });
 
 module.exports = pool;

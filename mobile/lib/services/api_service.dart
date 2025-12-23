@@ -5,7 +5,7 @@ import 'storage_service.dart';
 
 class ApiService {
   static final StorageService _storage = StorageService();
-  static const Duration _timeout = Duration(seconds: 15);
+  static const Duration _timeout = Duration(seconds: 60); // Increased for Render cold starts
 
   static Future<Map<String, String>> _getHeaders() async {
     final token = await _storage.getToken();

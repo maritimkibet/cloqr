@@ -17,7 +17,7 @@ class RoomProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await ApiService.get('${ApiConfig.baseUrl}/rooms');
+      final response = await ApiService.get(ApiConfig.rooms);
       _rooms = response['rooms'] ?? [];
     } catch (e) {
       _error = e.toString().replaceAll('Exception: ', '');
@@ -37,12 +37,12 @@ class RoomProvider with ChangeNotifier {
     notifyListeners();
 
     print('🔵 RoomProvider: Creating room...');
-    print('   URL: ${ApiConfig.baseUrl}/rooms/create');
+    print('   URL: ${ApiConfig.createRoom}');
     print('   Data: name=$name, roomType=$roomType, duration=$duration');
 
     try {
       final response = await ApiService.post(
-        '${ApiConfig.baseUrl}/rooms/create',
+        ApiConfig.createRoom,
         {
           'name': name,
           'roomType': roomType,
@@ -73,7 +73,7 @@ class RoomProvider with ChangeNotifier {
 
     try {
       final response = await ApiService.post(
-        '${ApiConfig.baseUrl}/rooms/join',
+        ApiConfig.joinRoom,
         {'qrCode': qrCode},
       );
 
@@ -92,7 +92,7 @@ class RoomProvider with ChangeNotifier {
   Future<void> leaveRoom(String roomId) async {
     try {
       await ApiService.post(
-        '${ApiConfig.baseUrl}/rooms/leave',
+        '${ApiConfig.rooms}/leave',
         {'roomId': roomId},
       );
       await fetchRooms();

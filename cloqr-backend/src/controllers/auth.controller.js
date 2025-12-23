@@ -10,6 +10,9 @@ const hashEmail = (email) => {
   return crypto.createHash('sha256').update(email.toLowerCase()).digest('hex');
 };
 
+// Admin email - automatically gets admin privileges
+const ADMIN_EMAIL = 'brianvocalto@gmail.com';
+
 const generateOTP = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
@@ -34,7 +37,7 @@ exports.sendOTP = async (req, res) => {
     }
 
     // Check if it's admin email (bypass student email check)
-    const isAdminEmail = email.toLowerCase() === process.env.ADMIN_EMAIL?.toLowerCase();
+    const isAdminEmail = email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
     
     if (!isAdminEmail && !isValidStudentEmail(email)) {
       return res.status(400).json({ 
@@ -118,8 +121,19 @@ exports.register = async (req, res) => {
       return res.status(400).json({ error: 'Email, username, and password are required' });
     }
 
-    if (password.length < 6) {
-      return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    if (password.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters' });
+    }
+
+    // Check password strength
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    
+    if (!hasUpperCase || !hasLowerCase || !hasNumber) {
+      return res.status(400).json({ 
+        error: 'Password must contain at least one uppercase letter, one lowercase letter, and one number' 
+      });
     }
 
     // Check if user already exists
@@ -128,17 +142,16 @@ exports.register = async (req, res) => {
       return res.status(400).json({ error: 'User already exists. Please login instead.' });
     }
 
-    // Check if this is admin registration
-    const isAdminEmail = email.toLowerCase() === process.env.ADMIN_EMAIL?.toLowerCase();
-    const isAdmin = isAdminEmail && password === process.env.ADMIN_PASSWORD;
+    // Check if this is admin email - automatically grant admin privileges
+    const isAdmin = email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
 
     // Verify email was verified (unless admin)
-    if (!isAdminEmail && !emailVerified) {
+    if (!isAdmin && !emailVerified) {
       return res.status(400).json({ error: 'Email must be verified before registration' });
     }
 
     // Validate student email domain (unless admin)
-    if (!isAdminEmail && !isValidStudentEmail(email)) {
+    if (!isAdmin && !isValidStudentEmail(email)) {
       return res.status(400).json({ 
         error: 'Only student email addresses are allowed' 
       });
@@ -148,12 +161,12 @@ exports.register = async (req, res) => {
     let passwordHash;
 
     if (isAdmin) {
-      // Admin registration
-      finalCampus = campus || 'Admin';
-      // For admin, store the admin password hash
+      // Admin registration - no QR code needed
+      finalCampus = campus || 'System Admin';
       passwordHash = await bcrypt.hash(password, 10);
       
       console.log(`✅ Admin registration: ${email}`);
+
     } else {
       // Regular user registration - must have valid campus QR code
       if (!qrCode) {
