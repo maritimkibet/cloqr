@@ -22,6 +22,26 @@ class Validators {
       return 'Invalid email format';
     }
     
+    // Allow admin emails (common admin domains)
+    final email = value.toLowerCase();
+    final adminDomains = ['admin.com', 'cloqr.com', 'localhost'];
+    final isAdminEmail = adminDomains.any((domain) => email.endsWith('@$domain')) ||
+                        email.contains('admin@');
+    
+    if (isAdminEmail) {
+      return null; // Admin emails are allowed
+    }
+    
+    // For regular users, require campus email domains
+    if (!email.endsWith('.edu') &&
+        !email.endsWith('.ac.za') &&
+        !email.endsWith('.edu.ke') &&
+        !email.endsWith('.ac.ke') &&
+        !email.contains('student') &&
+        !email.contains('university')) {
+      return 'Please use your campus email or admin email';
+    }
+    
     return null;
   }
   

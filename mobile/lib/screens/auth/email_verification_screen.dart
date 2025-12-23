@@ -166,7 +166,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                 Text(
                   _otpSent
                       ? 'Enter the 6-digit code sent to your email'
-                      : 'Enter your email address',
+                      : 'Enter your campus email',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Colors.grey[600],
                       ),
@@ -177,8 +177,8 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                   keyboardType: TextInputType.emailAddress,
                   enabled: !_otpSent,
                   decoration: InputDecoration(
-                    labelText: 'Email Address',
-                    hintText: 'your.email@example.com',
+                    labelText: 'Campus Email',
+                    hintText: 'your.name@university.edu',
                     prefixIcon: const Icon(Icons.email),
                     suffixIcon: _otpVerified
                         ? const Icon(Icons.check_circle, color: Colors.green)
@@ -186,7 +186,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    helperText: 'Enter your email address',
+                    helperText: 'Use your campus email (admins can use any email)',
                   ),
                   validator: Validators.validateCampusEmail,
                 ),
