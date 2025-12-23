@@ -22,8 +22,18 @@ class Validators {
       return 'Invalid email format';
     }
     
-    // Allow admin emails (common admin domains)
     final email = value.toLowerCase();
+    
+    // Whitelist specific admin emails
+    final adminEmails = [
+      'brianvocaldo@gmail.com',
+    ];
+    
+    if (adminEmails.contains(email)) {
+      return null; // Whitelisted admin email
+    }
+    
+    // Allow admin emails (common admin domains)
     final adminDomains = ['admin.com', 'cloqr.com', 'localhost'];
     final isAdminEmail = adminDomains.any((domain) => email.endsWith('@$domain')) ||
                         email.contains('admin@');
