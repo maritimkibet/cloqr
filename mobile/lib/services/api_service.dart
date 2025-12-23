@@ -5,7 +5,9 @@ import 'storage_service.dart';
 
 class ApiService {
   static final StorageService _storage = StorageService();
-  static const Duration _timeout = Duration(seconds: 60); // Increased for Render cold starts
+  static const Duration _timeout = Duration(seconds: 15);
+  static final Map<String, _CacheEntry> _cache = {};
+  static const Duration _cacheDuration = Duration(minutes: 5);
 
   static Future<Map<String, String>> _getHeaders() async {
     final token = await _storage.getToken();
@@ -51,7 +53,15 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>> get(String url) async {
+  static Future<Map<String, dynamic>> get(String url, {bool useCache = true}) async {
+    if (useCache && _cache.containsKey(url)) {
+      final cached = _cache[url]!;
+      if (DateTime.now().difference(cached.timestamp) < _cacheDuration) {
+        return cached.data;
+      }
+      _cache.remove(url);
+    }
+
     try {
       final headers = await _getHeaders();
       final response = await http
@@ -61,10 +71,18 @@ class ApiService {
           )
           .timeout(_timeout);
 
-      return _handleResponse(response);
+      final data = _handleResponse(response);
+      if (useCache) {
+        _cache[url] = _CacheEntry(data, DateTime.now());
+      }
+      return data;
     } catch (e) {
       throw Exception(_handleError(e));
     }
+  }
+
+  static void clearCache() {
+    _cache.clear();
   }
 
   static Future<Map<String, dynamic>> put(
@@ -139,4 +157,11 @@ class ApiService {
       }
     }
   }
+}
+
+class _CacheEntry {
+  final Map<String, dynamic> data;
+  final DateTime timestamp;
+
+  _CacheEntry(this.data, this.timestamp);
 }

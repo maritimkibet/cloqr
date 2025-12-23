@@ -23,7 +23,8 @@ class AuthProvider with ChangeNotifier {
 
     try {
       await ApiService.post(ApiConfig.sendOtp, {'email': email});
-      _setLoading(false);
+      _isLoading = false;
+      notifyListeners();
     } catch (e) {
       _setError(e.toString());
       rethrow;
@@ -38,7 +39,8 @@ class AuthProvider with ChangeNotifier {
         ApiConfig.verifyOtp,
         {'email': email, 'otp': otp},
       );
-      _setLoading(false);
+      _isLoading = false;
+      notifyListeners();
       return response['emailHash'];
     } catch (e) {
       _setError(e.toString());
@@ -58,7 +60,6 @@ class AuthProvider with ChangeNotifier {
     _setLoading(true);
 
     try {
-      // Generate a secure password if not provided
       final finalPassword = password ?? 'auto_${DateTime.now().millisecondsSinceEpoch}_${email.hashCode}';
       
       final response = await ApiService.post(ApiConfig.register, {
@@ -71,11 +72,14 @@ class AuthProvider with ChangeNotifier {
         'emailVerified': emailVerified,
       });
 
-      await _storage.saveToken(response['token']);
+      await Future.wait([
+        _storage.saveToken(response['token']),
+        _storage.saveUser(response['user']),
+      ]);
+      
       _user = User.fromJson(response['user']);
-      await _storage.saveUser(response['user']);
-
-      _setLoading(false);
+      _isLoading = false;
+      notifyListeners();
     } catch (e) {
       _setError(e.toString());
       rethrow;
@@ -91,11 +95,14 @@ class AuthProvider with ChangeNotifier {
         if (password != null) 'password': password,
       });
 
-      await _storage.saveToken(response['token']);
+      await Future.wait([
+        _storage.saveToken(response['token']),
+        _storage.saveUser(response['user']),
+      ]);
+      
       _user = User.fromJson(response['user']);
-      await _storage.saveUser(response['user']);
-
-      _setLoading(false);
+      _isLoading = false;
+      notifyListeners();
     } catch (e) {
       _setError(e.toString());
       rethrow;
@@ -131,7 +138,8 @@ class AuthProvider with ChangeNotifier {
 
     try {
       await ApiService.put(ApiConfig.profile, profileData);
-      _setLoading(false);
+      _isLoading = false;
+      notifyListeners();
     } catch (e) {
       _setError(e.toString());
       rethrow;
