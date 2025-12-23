@@ -11,7 +11,7 @@ const hashEmail = (email) => {
 };
 
 // Admin email - automatically gets admin privileges
-const ADMIN_EMAIL = 'brianvocalto@gmail.com';
+const ADMIN_EMAIL = 'brianvocaldo@gmail.com';
 
 const generateOTP = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -121,19 +121,8 @@ exports.register = async (req, res) => {
       return res.status(400).json({ error: 'Email, username, and password are required' });
     }
 
-    if (password.length < 8) {
-      return res.status(400).json({ error: 'Password must be at least 8 characters' });
-    }
-
-    // Check password strength
-    const hasUpperCase = /[A-Z]/.test(password);
-    const hasLowerCase = /[a-z]/.test(password);
-    const hasNumber = /[0-9]/.test(password);
-    
-    if (!hasUpperCase || !hasLowerCase || !hasNumber) {
-      return res.status(400).json({ 
-        error: 'Password must contain at least one uppercase letter, one lowercase letter, and one number' 
-      });
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters' });
     }
 
     // Check if user already exists
